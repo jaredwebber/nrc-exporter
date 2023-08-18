@@ -18,13 +18,13 @@ You can either install the package from [PyPI](https://pypi.org/project/nrc-expo
 
 The PyPI method is the easiest as it installs the dependencies as well (other than geckodriver). Run the following command to install from PyPI:
 
-```
-$ pip install nrc-exporter
+```shell
+pip install nrc-exporter
 ```
 
 If everything goes well, you should be able to run this command:
 
-```
+```shell
 $ nrc-exporter --help
 
   _   _ ____   ____                              _
@@ -63,15 +63,15 @@ Just clone the repo, install the dependencies and run it.
 
 - Clone it:
 
-```
-$ git clone git@github.com:yasoob/nrc-exporter.git
+```shell
+git clone git@github.com:yasoob/nrc-exporter.git
 ```
 
 - Install dependencies:
 
-```
-$ cd nrc-exporter
-$ pip install -r requirements.txt
+```shell
+cd nrc-exporter
+pip install -r requirements.txt
 ```
 
 - Add Geckodriver in path
@@ -80,13 +80,13 @@ The automated access token extraction makes use of selenium and geckodriver. I u
 
 - Run it:
 
-```
+```shell
 python nrc_exporter.py --help
 ```
 
 If everything goes well you will see the following text:
 
-```
+```shell
   _   _ ____   ____                              _
  | \ | |  _ \ / ___|   _____  ___ __   ___  _ __| |_ ___ _ __
  |  \| | |_) | |      / _ \ \/ / '_ \ / _ \| '__| __/ _ \ '__|
@@ -123,8 +123,8 @@ You have multiple ways to run this application. You can either provide an email 
 
 This is probably the easiest way to run the application. The program will try to automatically extract the access_tokens for NRC by logging you in using Selenium and intercepting the requests. You will have to run nrc_exporter like this:
 
-```
-$ nrc-exporter -e yasoob@example.com -p sample_password
+```shell
+nrc-exporter -e yasoob@example.com -p sample_password
 ```
 
 This method will probably be blocked by Nike in the near future. If it doesn't work use the access tokens method described below.
@@ -133,15 +133,15 @@ This method will probably be blocked by Nike in the near future. If it doesn't w
 
 This is useful for when the program is unable to extract the tokens automatically. You will have to manually provide the access tokens to the program. If you don't know where to get the access tokens from, just run the program without any arguments and it should automatically open the URL where you can log in. For extracting the tokens from that page check out [these instructions](#heavy_dollar_sign-extracting-access-tokens). Once you have the tokens, you can run nrc_extractor like this:
 
-```
-$ nrc-exporter -t <access_token>
+```shell
+nrc-exporter -t <access_token>
 ```
 
 - Activities folder
 
 Some of you might have already downloaded your NRC runs data using [this script](https://gist.github.com/niw/858c1ecaef89858893681e46db63db66) and are now wondering how to convert that JSON data to GPX data. Put all of those activity JSON files in a folder and pass that folder's name to nrc_extractor. Let's suppose you put all of those files in the `activities` folder. It should look something like this:
 
-```
+```bash
 $ tree activities
 activities
 ├── 0019f189-d32f-437f-a4d4-ef4f15304324.json
@@ -152,7 +152,7 @@ activities
 
 Now you can run `nrc_extractor` like this:
 
-```
+```bash
 $ nrc-exporter -i activities
 or 
 $ nrc-exporter -i 07e1fa42-a9a9-4626-bbef-60269dc4a111.json 01a09869-0a95-49f2-bd84-75065b701c33.json
@@ -160,13 +160,19 @@ $ nrc-exporter -i 07e1fa42-a9a9-4626-bbef-60269dc4a111.json 01a09869-0a95-49f2-b
 
 ## :heavy_dollar_sign: Extracting access tokens
 
+---
+
+### This url: <https://www.nike.com/tw/> seems to load access token in localstorage
+
+---
+
 Nike uses Akamai Bot Manager which doesn't allow scripts to automatically log users in and extract the access tokens. Sometimes you might be lucky and automated token extraction works but mostly you will find the automated token extraction to be broken. Luckily, manually extracting the access token isn't too hard.
 
 Just open up your favorite browser, open developer tools, and head over to this [login url](https://unite.nike.com/s3/unite/mobile.html?androidSDKVersion=3.1.0&corsoverride=https://unite.nike.com&uxid=com.nike.sport.running.droid.3.8&locale=en_US&backendEnvironment=identity&view=login&clientId=WLr1eIG5JSNNcBJM3npVa6L76MK8OBTt&facebookAppId=84697719333&wechatAppId=wxde7d0246cfaf32f7) and log in.
 
 Submitting the form will not do much. You will just have a blank page in front of you but you will be logged in. Now in order to extract the access tokens, open up developer tools. You can search online about how to open the developer tools for your specific browser. Once the developer tools are open, click on the `Console` and type this:
 
-```
+```js
 JSON.parse(window.localStorage.getItem('com.nike.commerce.nikedotcom.web.credential')).access_token
 ```
 
@@ -182,7 +188,6 @@ Click on the `/login` request and check the response. It will contain the requir
 
 ![image](https://user-images.githubusercontent.com/3696393/86953412-696cac80-c122-11ea-851e-a1516f5e302f.png)
 
-
 Now copy these `access_tokens` and provide them to the program.
 
 ## :heavy_exclamation_mark: Limitations
@@ -190,7 +195,6 @@ Now copy these `access_tokens` and provide them to the program.
 This was a weekend project so there are definitely a lot of rough edges to this script. Try it at your own risk. I have extracted my runs successfully with this program so I am hopeful that it will work for you too. In case it fails please open up an issue and I will take a look.
 
 For now, one major isssue is that the script does not correctly add elevation data to the GPX file. NRC provides us with the ascent and descent data of different runs but I am not sure of the math that is required to convert that into actual elevation data. This data wasn't particularly important for me to maintain for historic runs so I did not spend a lot of time on it. You are more than welcome to open up a PR if you know how to do it.
-
 
 ## :camera: Screenshots
 
@@ -207,13 +211,13 @@ This is for my own documentation. There are three steps involved with releasing 
 - Increment the version number in `setup.py`
 - Build the distribution package
 
-```
+```shell
 python setup.py sdist bdist_wheel
 ```
 
 - Upload to PyPI:
 
-```
+```shell
 python -m twine upload --skip-existing --repository pypi dist/*
 ```
 
@@ -221,7 +225,7 @@ python -m twine upload --skip-existing --repository pypi dist/*
 
 This program is distributed under the MIT license. You are more than welcome to take a look, modify and redistribute it (even for commercial purposes). Just make sure that the LICENSE file stays intact and you redistribute it under the same license.
 
-```
+```license
 MIT License
 
 Copyright (c) 2020 M.Yasoob Ullah Khalid ☺

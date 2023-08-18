@@ -57,19 +57,17 @@ SUBMIT_BTN_CSS = (
     "div.nike-unite-submit-button.loginSubmit.nike-unite-component input[type='button']"
 )
 
-
 LOGO = """
   _   _ ____   ____                              _            
  | \ | |  _ \ / ___|   _____  ___ __   ___  _ __| |_ ___ _ __ 
- |  \| | |_) | |      / _ \ \/ / '_ \ / _ \| '__| __/ _ \ '__|
+ |  \| | |_) | |      / _ \ \/ / '_ \ / _ \| '__| __/ _ \ '__| 
  | |\  |  _ <| |___  |  __/>  <| |_) | (_) | |  | ||  __/ |   
  |_| \_|_| \_\\____|  \___/_/\_\ .__/ \___/|_|   \__\___|_|   
                                |_|                            
 
                                             ~ Yasoob Khalid
                                               https://yasoob.me
-
-"""
+"""  # noqa: W605, W291
 
 
 def f_message(msg, level="info"):
@@ -173,7 +171,10 @@ def login(driver, email, password):
 
     submit_btn = WebDriverWait(driver, 10).until(
         expected_conditions.presence_of_element_located(
-            (By.CSS_SELECTOR, SUBMIT_BTN_CSS,)
+            (
+                By.CSS_SELECTOR,
+                SUBMIT_BTN_CSS,
+            )
         )
     )
     submit_btn.click()
@@ -181,17 +182,16 @@ def login(driver, email, password):
     debug("Submitted email and password")
 
     try:
-        login_dialog = WebDriverWait(driver, 5).until(
+        WebDriverWait(driver, 5).until(
             expected_conditions.invisibility_of_element_located(
                 (By.CSS_SELECTOR, LOGIN_DIALOG_CSS)
             )
         )
         info("Seems like login was successful")
         return True
-
-    except:
+    except Exception:
         warning(
-            f"Seems like automated login wasn't successful. You will have to manually provide access tokens"
+            "Seems like automated login wasn't successful. You will have to manually provide access tokens"
         )
         return False
 
@@ -212,10 +212,10 @@ def extract_token(driver):
 
     try:
         access_token = json.loads(resp_body)["access_token"]
-        info(f"💉 Successfully extracted access token")
+        info("💉 Successfully extracted access token")
         debug(f"Access Token: {access_token}")
-    except:
-        error(f"Unable to extract access token. You will have to manually pass it in")
+    except Exception:
+        error("Unable to extract access token. You will have to manually pass it in")
     return access_token
 
 
@@ -233,7 +233,7 @@ def get_access_token(options):
     login_success = False
 
     if options["gecko_path"] and not options["manual"]:
-        info(f"🚗 Starting gecko webdriver")
+        info("🚗 Starting gecko webdriver")
         driver = webdriver.Firefox(executable_path=options["gecko_path"])
         driver.scopes = [
             ".*nike.*",
@@ -241,7 +241,7 @@ def get_access_token(options):
         login_success = login(driver, options["email"], options["password"])
 
         if options["debug"]:
-            debug(f"Saving screenshot from after login")
+            debug("Saving screenshot from after login")
             with open("website.png", "wb") as f:
                 f.write(driver.get_screenshot_as_png())
 
@@ -249,9 +249,9 @@ def get_access_token(options):
         access_token = extract_token(driver)
     else:
         info(
-            f"I will open your web browser and you will have to manually intercept the access tokens.\n"
-            f"    You can find more details on how to do this over here: https://git.io/nrc-exporter\n"
-            f"    Press 'y' to open up the login url"
+            "I will open your web browser and you will have to manually intercept the access tokens.\n"
+            "    You can find more details on how to do this over here: https://git.io/nrc-exporter\n"
+            "    Press 'y' to open up the login url"
         )
         accept = input()
         if not accept == "y":
@@ -259,17 +259,17 @@ def get_access_token(options):
             sys.exit(0)
 
         webbrowser.open_new_tab(MOBILE_LOGIN_URL)
-        info(f"Please paste access tokens here: \n")
+        info("Please paste access tokens here: \n")
         access_token = input()
         debug(f"Manually entered access token: {access_token}")
         if len(access_token) < 5:
             error(
-                f"You didn't paste access tokens. Please provide them using -t or --token argument"
+                "You didn't paste access tokens. Please provide them using -t or --token argument"
             )
             sys.exit(1)
 
     info(
-        f"Closing the webdriver. From here on we will be using requests library instead"
+        "Closing the webdriver. From here on we will be using requests library instead"
     )
     driver.quit()
     return access_token
@@ -303,10 +303,13 @@ def get_activities_list(options):
             error("Are you sure you provided the correct access token?")
             sys.exit()
         for activity in activity_list.json()["activities"]:
-            debug(f"Entry type: {activity.get('tags', {}).get('com.nike.running.runtype', 'unknow type')}")
+            debug(
+                f"Entry type: {activity.get('tags', {}).get('com.nike.running.runtype', 'unknow type')}"
+            )
             if (
                 activity["type"] == "run"
-                and activity.get("tags", {}).get("com.nike.running.runtype", "") != "manual"
+                and activity.get("tags", {}).get("com.nike.running.runtype", "")
+                != "manual"
             ):
                 # activity["tags"]["location"].lower() == "outdoors":
                 activity_ids.append(activity.get("id"))
@@ -343,7 +346,7 @@ def get_activity_details(activity_id, options):
 
 def save_activity(activity_json, activity_id):
     debug(f"Saving {activity_id}.json to disk")
-    title = activity_json.get("tags", {}).get("com.nike.name", "")
+    # title = activity_json.get("tags", {}).get("com.nike.name", "")
     json_path = os.path.join(ACTIVITY_FOLDER, f"{activity_id}.json")
     with open(json_path, "w") as f:
         f.write(json.dumps(activity_json))
@@ -395,17 +398,20 @@ def generate_gpx(title, latitude_data, longitude_data, elevation_data, heart_rat
                 p[update_name] = update_data[counter]["value"]
                 counter += 1
 
-
     for lat, lon in zip(latitude_data, longitude_data):
         if lat["start_epoch_ms"] != lon["start_epoch_ms"]:
-            error(f"\tThe latitude and longitude data is out of order")
+            error("\tThe latitude and longitude data is out of order")
 
-        points_dict_list.append({
-            "latitude": lat["value"],
-            "longitude": lon["value"],
-            "start_time":  lat["start_epoch_ms"],
-            "time": datetime.datetime.utcfromtimestamp(lat["start_epoch_ms"] / 1000)
-            })
+        points_dict_list.append(
+            {
+                "latitude": lat["value"],
+                "longitude": lon["value"],
+                "start_time": lat["start_epoch_ms"],
+                "time": datetime.datetime.utcfromtimestamp(
+                    lat["start_epoch_ms"] / 1000
+                ),
+            }
+        )
 
     if elevation_data:
         update_points(points_dict_list, elevation_data, "elevation")
@@ -416,14 +422,16 @@ def generate_gpx(title, latitude_data, longitude_data, elevation_data, heart_rat
         # delete useless attr
         del p["start_time"]
         if p.get("heart_rate") is None:
-           point = gpxpy.gpx.GPXTrackPoint(**p)
+            point = gpxpy.gpx.GPXTrackPoint(**p)
         else:
             heart_rate_num = p.pop("heart_rate")
             point = gpxpy.gpx.GPXTrackPoint(**p)
-            gpx_extension_hr = ElementTree.fromstring(f"""<gpxtpx:TrackPointExtension xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1">
+            gpx_extension_hr = ElementTree.fromstring(
+                f"""<gpxtpx:TrackPointExtension xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1">
                 <gpxtpx:hr>{heart_rate_num}</gpxtpx:hr>
                 </gpxtpx:TrackPointExtension>
-            """)
+            """
+            )
             point.extensions.append(gpx_extension_hr)
         gpx_segment.points.append(point)
 
@@ -447,9 +455,7 @@ def parse_activity_data(activity):
     ascent_index = None
     heart_rate_index = None
     if not activity.get("metrics"):
-        warning(
-            f"\tThe activity {activity['id']} doesn't contain metrics information"
-        )
+        warning(f"\tThe activity {activity['id']} doesn't contain metrics information")
         return None
     for i, metric in enumerate(activity["metrics"]):
         if metric["type"] == "latitude":
@@ -481,7 +487,9 @@ def parse_activity_data(activity):
 
     title = activity.get("tags", {}).get("com.nike.name", "")
 
-    gpx_doc = generate_gpx(title, latitude_data, longitude_data, elevation_data, heart_rate_data)
+    gpx_doc = generate_gpx(
+        title, latitude_data, longitude_data, elevation_data, heart_rate_data
+    )
     info(f"✔ Activity {activity['id']} successfully parsed")
     return gpx_doc
 
@@ -508,7 +516,7 @@ def get_gecko_path():
     Returns:
         path: the absolute path to geckodriver
     """
-    debug(f"Checking if geckodriver is in path or not")
+    debug("Checking if geckodriver is in path or not")
     if os.path.exists("geckodriver"):
         return os.path.join(os.getcwd(), "geckodriver")
     else:
@@ -534,8 +542,11 @@ def arg_parser():
     ap.add_argument("-v", "--verbose", action="store_true", help="print verbose output")
     ap.add_argument("-t", "--token", help="your nrc token", required=False)
     ap.add_argument(
-        "-i", "--input", nargs='+', help="A directory or directories containing NRC activities in JSON format."
-        "You can also provide individual NRC JSON files"
+        "-i",
+        "--input",
+        nargs="+",
+        help="A directory or directories containing NRC activities in JSON format."
+        "You can also provide individual NRC JSON files",
     )
     args = ap.parse_args()
 
@@ -543,7 +554,7 @@ def arg_parser():
         logger = logging.getLogger(__name__)
         logger.setLevel(logging.DEBUG)
 
-    debug(f"Passed in arguments:")
+    debug("Passed in arguments:")
     debug(f"\t\tEmail: {args.email}")
     debug(f"\t\tPassword: {args.password}")
     debug(f"\t\tToken: {args.token}")
@@ -587,7 +598,8 @@ def init_logger():
         os.mkdir(ACTIVITY_FOLDER)
 
     logging.basicConfig(
-        format="%(message)s", level=logging.INFO,
+        format="%(message)s",
+        level=logging.INFO,
     )
     # Set this to True if you want to see the actual requests captured by seleniumwire
     logging.getLogger("seleniumwire").propagate = False
@@ -624,7 +636,9 @@ def main():
         for folder in activity_folders:
             # add path to every file in folder
             activity_files.extend([os.path.join(folder, f) for f in os.listdir(folder)])
-        info(f"Parsing activity JSON files from the {','.join(activity_folders)} folders")
+        info(
+            f"Parsing activity JSON files from the {','.join(activity_folders)} folders"
+        )
 
     total_parsed_count = 0
     for file_path in activity_files:
